@@ -46,14 +46,14 @@
   "main": "eslint.config.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/msv-engg25/ts.ispat.git"
+    "url": "git+https://github.com/msv-engg25/ts.ispat.db.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/msv-engg25/ts.ispat/issues"
+    "url": "https://github.com/msv-engg25/ts.ispat.db/issues"
   },
-  "homepage": "https://github.com/msv-engg25/ts.ispat#readme",
+  "homepage": "https://github.com/msv-engg25/ts.ispat.db#readme",
   "description": ""
 }
