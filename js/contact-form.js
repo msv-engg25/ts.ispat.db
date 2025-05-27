@@ -1,106 +1,73 @@
-// Contact form handling
+document.addEventListener('DOMContentLoaded', function () {
+  const contactForm = document.getElementById('contact-form');
+  const submitBtn = document.getElementById('submit-button');
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Get the contact form element
-    const contactForm = document.getElementById('contact-form');
-    
-    // Add submit event listener to the form if it exists
-    if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            // Prevent the default form submission
-            e.preventDefault();
-            
-            // Get form data
-            const formData = {
-                name: document.getElementById('name').value,
-                company: document.getElementById('company').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                subject: document.getElementById('subject').value,
-                message: document.getElementById('message').value,
-                inquiryType: document.getElementById('inquiry-type').value
-            };
-            
-            // Validate form data
-            if (validateForm(formData)) {
-                // Show loading state
-                showFormMessage('Submitting your message...', 'processing');
-                
-                // Simulate form submission (In a real implementation, you would send data to a server here)
-                setTimeout(() => {
-                    // Show success message
-                    showFormMessage('Thank you! Your message has been submitted successfully. We will contact you soon.', 'success');
-                    
-                    // Reset the form
-                    contactForm.reset();
-                    
-                    // Hide the message after 5 seconds
-                    setTimeout(() => {
-                        hideFormMessage();
-                    }, 5000);
-                }, 1500);
-            }
-        });
+  contactForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const formData = {
+      name: document.getElementById('name').value.trim(),
+      company: document.getElementById('company').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      subject: document.getElementById('subject').value.trim(),
+      message: document.getElementById('message').value.trim(),
+      inquiryType: document.getElementById('inquiry-type').value,
+      consent: document.getElementById('consent').checked
+    };
+
+    // Check for consent
+    if (!formData.consent) {
+      showFormMessage('You must give consent to submit the form.', 'error');
+      return;
     }
-    
-    // Form validation function
-    function validateForm(data) {
-        // Check for empty fields
-        for (const key in data) {
-            if (data[key].trim() === '') {
-                showFormMessage('Please fill in all required fields.', 'error');
-                return false;
-            }
-        }
-        
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(data.email)) {
-            showFormMessage('Please enter a valid email address.', 'error');
-            return false;
-        }
-        
-        // Validate phone number (basic validation, can be enhanced)
-        const phoneRegex = /^[+]?[\s./0-9]*[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/;
-        if (!phoneRegex.test(data.phone)) {
-            showFormMessage('Please enter a valid phone number.', 'error');
-            return false;
-        }
-        
-        return true;
+
+    // Basic phone validation (only numbers, optional +, -, (), spaces)
+    const phonePattern = /^[+\d\s()-]{7,20}$/;
+    if (!phonePattern.test(formData.phone)) {
+      showFormMessage('Please enter a valid phone number.', 'error');
+      return;
     }
-    
-    // Function to show form messages
-    function showFormMessage(message, type) {
-        const messageElement = document.getElementById('form-message');
-        
-        if (messageElement) {
-            messageElement.textContent = message;
-            messageElement.style.display = 'block';
-            
-            // Remove all existing classes
-            messageElement.className = 'form-message';
-            
-            // Add the appropriate class based on message type
-            if (type === 'success') {
-                messageElement.classList.add('success');
-            } else if (type === 'error') {
-                messageElement.classList.add('error');
-            } else if (type === 'processing') {
-                messageElement.classList.add('processing');
-            }
-            
-            // Scroll to the message
-            messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Disable submit button during processing
+    submitBtn.disabled = true;
+    showFormMessage('Submitting your message...', 'processing');
+
+    // Send request
+    fetch('https://backend2-bclm.onrender.com/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    })
+      .then(async res => {
+        const data = await res.json();
+        console.log('Response:', data);
+        if (data.success) {
+          showFormMessage('Thank you! Your message has been submitted.', 'success');
+          contactForm.reset();
+        } else {
+          showFormMessage(data.error || 'Something went wrong.', 'error');
         }
-    }
-    
-    // Function to hide form messages
-    function hideFormMessage() {
-        const messageElement = document.getElementById('form-message');
-        
-        if (messageElement) {
-            messageElement.style.display = 'none';
-        }
-    }
+        setTimeout(hideFormMessage, 5000);
+      })
+      .catch(err => {
+        console.error('❌ Error:', err);
+        showFormMessage('Failed to contact server. Try again later.', 'error');
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+      });
+  });
+
+  function showFormMessage(message, type) {
+    const msg = document.getElementById('form-message');
+    msg.textContent = message;
+    msg.style.display = 'block';
+    msg.className = 'form-message ' + type;
+    msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function hideFormMessage() {
+    document.getElementById('form-message').style.display = 'none';
+  }
 });
